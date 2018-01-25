@@ -27,6 +27,7 @@ use OS\DatabaseAccessLayer\Driver\MysqlPdo\Statement\Result;
 use OS\DatabaseAccessLayer\Exception\AuthenticationException;
 use OS\DatabaseAccessLayer\Exception\DriverException;
 use OS\DatabaseAccessLayer\Specification as SpecificationInterface;
+use OS\DatabaseAccessLayer\Statement\Exception\InvalidFetchTypeException;
 use OS\DatabaseAccessLayer\Statement\Exception\StatementException;
 use OS\DatabaseAccessLayer\Statement\Exception\StatementExecutionException;
 use OS\DatabaseAccessLayer\Statement\Exception\StatementPreparationException;
@@ -118,6 +119,7 @@ class Driver implements DriverInterface
 
     /**
      * @return SpecificationInterface|Specification
+     * @codeCoverageIgnore
      */
     public function getSpecification(): SpecificationInterface
     {
@@ -175,6 +177,7 @@ class Driver implements DriverInterface
      *
      * @return StatementResult
      * @throws StatementExecutionException
+     * @throws InvalidFetchTypeException
      *
      * @codeCoverageIgnore
      */
@@ -186,7 +189,6 @@ class Driver implements DriverInterface
                 $error = $this->pdo->errorInfo();
                 throw new \RuntimeException($error[0].': '.$error[2], $error[1]);
             }
-            $statement->execute();
         }
         catch(\Throwable $exception) {
             throw new StatementExecutionException(

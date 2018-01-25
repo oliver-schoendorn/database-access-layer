@@ -52,6 +52,21 @@ interface Driver
     public function getLastInsertedId(): int;
 
     /**
+     * @return bool
+     */
+    public function transactionStart(): bool;
+
+    /**
+     * @return bool
+     */
+    public function transactionAbort(): bool;
+
+    /**
+     * @return bool
+     */
+    public function transactionCommit(): bool;
+
+    /**
      * @param string $sql
      *
      * @return Result

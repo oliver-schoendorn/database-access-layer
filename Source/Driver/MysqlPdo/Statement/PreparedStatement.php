@@ -110,7 +110,7 @@ class PreparedStatement implements \OS\DatabaseAccessLayer\Statement\PreparedSta
             return $this->interpolateQuery($parameterContainer);
         }
 
-        return $this->statement->queryString;
+        return $this->statement->queryString ?? '';
     }
 
     /**

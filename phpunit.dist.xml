@@ -1,0 +1,24 @@
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/6.3/phpunit.xsd"
+        bootstrap="Test/bootstrap.php"
+        cacheTokens="false"
+        printerClass="LimeDeck\Testing\Printer"
+        colors="true"
+        verbose="false">
+    <php>
+        <env name="DB_HOST" value="" />
+        <env name="DB_NAME" value="" />
+        <env name="DB_PORT" value="-1" />
+        <env name="DB_USER" value="" />
+        <env name="DB_PASS" value="" />
+    </php>
+    <testsuites>
+        <testsuite name="AcceptanceTest">
+            <directory>Test/AcceptanceTest</directory>
+        </testsuite>
+        <testsuite name="UnitTest">
+            <directory>Test/UnitTest</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

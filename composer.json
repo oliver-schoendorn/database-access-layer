@@ -5,6 +5,11 @@
             "OS\\DatabaseAccessLayer\\": "./Source"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "OS\\DatabaseAccessLayer\\Test\\": "./Test"
+        }
+    },
     "minimum-stability": "stable",
     "require": {
         "php": "^7.0"

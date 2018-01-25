@@ -1,3 +1,5 @@
 /vendor/
 /composer.lock
-/phpunit.yml
+/phpunit.xml
+/Test/Output/
+!/Test/Output/.gitkeep

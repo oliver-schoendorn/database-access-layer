@@ -151,12 +151,15 @@ class ParameterContainer implements ParameterContainerInterface
      */
     public function getParameters(): array
     {
+        $response = [];
         foreach ($this->parameters as $key => $parameter) {
-            if ($parameter[2] !== static::TYPE_NULL && is_null($parameter[1])) {
+            if ($parameter[1] !== static::TYPE_NULL && ! array_key_exists($key, $this->values)) {
                 throw new MissingParameterValueException($key);
             }
+
+            $response[$key] = [ $parameter[0], $this->values[$key] ?? null, $parameter[1] ];
         }
 
-        return $this->parameters;
+        return $response;
     }
 }
