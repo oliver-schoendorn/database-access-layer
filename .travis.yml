@@ -8,7 +8,7 @@ install:
   - composer install
 
 script:
-  - php vendor/bin/phpunit run --coverage --coverage-xml
+  - php vendor/bin/phpunit run
 
 after_success:
   - php vendor/bin/php-coveralls
