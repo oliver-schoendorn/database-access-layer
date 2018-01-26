@@ -1,15 +1,14 @@
 {
     "name": "oliver-schoendorn/database-access-layer",
-    "autoload": {
-        "psr-4": {
-            "OS\\DatabaseAccessLayer\\": "./Source"
+    "type": "library",
+    "keywords": [],
+    "authors": [
+        {
+            "name": "Oliver Schoendorn",
+            "email": "info@oswebstyle.de"
         }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "OS\\DatabaseAccessLayer\\Test\\": "./Test"
-        }
-    },
+    ],
+    "license": "Apache-2.0",
     "minimum-stability": "stable",
     "require": {
         "php": "^7.0"
@@ -19,5 +18,15 @@
         "phpunit/dbunit": "^3.0",
         "limedeck/phpunit-detailed-printer": "^3.1",
         "codeception/verify": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "OS\\DatabaseAccessLayer\\": "./Source"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OS\\DatabaseAccessLayer\\Test\\": "./Test"
+        }
     }
 }

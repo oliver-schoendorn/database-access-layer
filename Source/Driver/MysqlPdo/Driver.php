@@ -19,16 +19,12 @@ namespace OS\DatabaseAccessLayer\Driver\MysqlPdo;
 
 
 use OS\DatabaseAccessLayer\Driver as DriverInterface;
-use OS\DatabaseAccessLayer\Driver\MysqlPdo\Exception\PdoException;
 use OS\DatabaseAccessLayer\Driver\MysqlPdo\Exception\PdoExceptionFactory;
-use OS\DatabaseAccessLayer\Driver\MysqlPdo\Exception\PdoStatementExceptionFactory;
 use OS\DatabaseAccessLayer\Driver\MysqlPdo\Statement\PreparedStatement;
 use OS\DatabaseAccessLayer\Driver\MysqlPdo\Statement\Result;
-use OS\DatabaseAccessLayer\Exception\AuthenticationException;
 use OS\DatabaseAccessLayer\Exception\DriverException;
 use OS\DatabaseAccessLayer\Specification as SpecificationInterface;
 use OS\DatabaseAccessLayer\Statement\Exception\InvalidFetchTypeException;
-use OS\DatabaseAccessLayer\Statement\Exception\StatementException;
 use OS\DatabaseAccessLayer\Statement\Exception\StatementExecutionException;
 use OS\DatabaseAccessLayer\Statement\Exception\StatementPreparationException;
 use OS\DatabaseAccessLayer\Statement\PreparedStatement as PreparedStatementInterface;

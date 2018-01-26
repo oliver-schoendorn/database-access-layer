@@ -13,6 +13,16 @@
         <env name="DB_USER" value="" />
         <env name="DB_PASS" value="" />
     </php>
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">Source</directory>
+        </whitelist>
+    </filter>
+    <logging>
+        <log type="coverage-html" target="Test/Output/Coverage"/>
+        <log type="coverage-clover" target="Test/Output/coverage.xml"/>
+        <log type="coverage-text" target="php://stdout"/>
+    </logging>
     <testsuites>
         <testsuite name="AcceptanceTest">
             <directory>Test/AcceptanceTest</directory>
