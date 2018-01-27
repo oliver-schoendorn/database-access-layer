@@ -20,7 +20,6 @@ namespace OS\DatabaseAccessLayer\Driver\MysqlPdo\Statement;
 
 use OS\DatabaseAccessLayer\Statement\Exception\MissingParameterValueException;
 use OS\DatabaseAccessLayer\Statement\Exception\StatementExecutionException;
-use OS\DatabaseAccessLayer\Statement\ParameterContainer;
 use OS\DatabaseAccessLayer\Statement\ParameterContainerInterface;
 use OS\DatabaseAccessLayer\Statement\Result as StatementResult;
 
@@ -58,10 +57,7 @@ class PreparedStatement implements \OS\DatabaseAccessLayer\Statement\PreparedSta
     public function execute(ParameterContainerInterface $parameterContainer = null): StatementResult
     {
         if ( ! is_null($parameterContainer)) {
-            foreach ($parameterContainer->getParameters() as $parameter) {
-                $parameter[2] = $this->parseParameterType($parameter[2]);
-                $this->statement->bindParam(...$parameter);
-            }
+            $this->bindParameters($parameterContainer);
         }
 
         try {
@@ -91,26 +87,44 @@ class PreparedStatement implements \OS\DatabaseAccessLayer\Statement\PreparedSta
         }
     }
 
+    /**
+     * @param ParameterContainerInterface $parameterContainer
+     *
+     * @throws MissingParameterValueException
+     */
+    private function bindParameters(ParameterContainerInterface $parameterContainer)
+    {
+        foreach ($parameterContainer->getParameters() as $parameter) {
+            $parameter[2] = $this->parseParameterType($parameter[2]);
+            $this->statement->bindParam(...$parameter);
+        }
+    }
+
     private function parseParameterType(int $parameterType): int
     {
         switch ($parameterType) {
-            case ParameterContainer::TYPE_NULL:
-                return \PDO::PARAM_NULL;
+            case ParameterContainerInterface::TYPE_NULL:
+                $response = \PDO::PARAM_NULL;
+                break;
 
-            case ParameterContainer::TYPE_INT:
-                return \PDO::PARAM_INT;
+            case ParameterContainerInterface::TYPE_INT:
+                $response = \PDO::PARAM_INT;
+                break;
 
-            case ParameterContainer::TYPE_BOOL:
-                return \PDO::PARAM_BOOL;
+            case ParameterContainerInterface::TYPE_BOOL:
+                $response = \PDO::PARAM_BOOL;
+                break;
 
-            case ParameterContainer::TYPE_STRING:
-                return \PDO::PARAM_STR;
+            case ParameterContainerInterface::TYPE_STRING:
+                $response = \PDO::PARAM_STR;
+                break;
 
-            case ParameterContainer::TYPE_STREAM:
-                return \PDO::PARAM_LOB;
-
-            default: return \PDO::PARAM_STR; // @codeCoverageIgnore
+            case ParameterContainerInterface::TYPE_STREAM:
+                $response = \PDO::PARAM_LOB;
+                break;
         }
+
+        return $response ?? \PDO::PARAM_STR;
     }
 
     /**
@@ -157,22 +171,27 @@ class PreparedStatement implements \OS\DatabaseAccessLayer\Statement\PreparedSta
     {
         switch ($valueType) {
             case ParameterContainerInterface::TYPE_NULL:
-                return 'NULL';
+                $response = 'NULL';
+                break;
 
             case ParameterContainerInterface::TYPE_INT:
-                return (int) $value;
+                $response = (int) $value;
+                break;
 
             case ParameterContainerInterface::TYPE_BOOL:
-                return $value === true ? 'TRUE' : 'FALSE';
+                $response = $value === true ? 'TRUE' : 'FALSE';
+                break;
 
             case ParameterContainerInterface::TYPE_STRING:
-                return sprintf('"%s"', $value);
+                $response = sprintf('"%s"', $value);
+                break;
 
             case ParameterContainerInterface::TYPE_STREAM:
                 rewind($value);
-                return sprintf('"%s"', stream_get_contents($value));
+                $response = sprintf('"%s"', stream_get_contents($value));
+                break;
         }
 
-        return '%UNDEFINED%'; // @codeCoverageIgnore
+        return $response ?? 'UNDEFINED';
     }
 }
