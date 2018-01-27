@@ -30,4 +30,4 @@ after_success:
 
 after_script:
   - ./cc-test-reporter-upload-coverage -i ./Test/Output/coverage.xml
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT --coverage-input-type clover
