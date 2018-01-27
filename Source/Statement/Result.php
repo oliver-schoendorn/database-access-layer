@@ -20,7 +20,7 @@ namespace OS\DatabaseAccessLayer\Statement;
 
 use OS\DatabaseAccessLayer\Statement\Exception\InvalidFetchTypeException;
 
-interface Result extends \SeekableIterator, \Countable
+interface Result extends \Iterator, \Countable
 {
     /**
      * Available fetch types

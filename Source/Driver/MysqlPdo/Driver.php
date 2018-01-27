@@ -173,18 +173,14 @@ class Driver implements DriverInterface
      *
      * @return StatementResult
      * @throws StatementExecutionException
-     * @throws InvalidFetchTypeException
      *
      * @codeCoverageIgnore
      */
     public function query(string $sql, array $driverOptions = []): StatementResult
     {
         try {
-            $statement = $this->pdo->query($sql);
-            if ( ! $statement) {
-                $error = $this->pdo->errorInfo();
-                throw new \RuntimeException($error[0].': '.$error[2], $error[1]);
-            }
+            $statement = $this->prepare($sql, $driverOptions);
+            return $statement->execute();
         }
         catch(\Throwable $exception) {
             throw new StatementExecutionException(
@@ -193,8 +189,6 @@ class Driver implements DriverInterface
                 $exception
             );
         }
-
-        return new Result($statement);
     }
 
     /**
@@ -210,6 +204,7 @@ class Driver implements DriverInterface
     {
         try {
             $statement = $this->pdo->prepare($sql, $driverOptions);
+
             if ( ! $statement) {
                 $error = $this->pdo->errorInfo();
                 throw new \RuntimeException($error[0].': '.$error[2], $error[1]);

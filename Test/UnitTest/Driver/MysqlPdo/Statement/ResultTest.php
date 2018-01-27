@@ -194,95 +194,6 @@ class ResultTest extends UnitTestCase
         verify((new ObjectInspector($result))->getValue('pointer'))->equals(3);
     }
 
-    /**
-     * @throws \ReflectionException
-     */
-    public function testPrevious()
-    {
-        $rows = [
-            (object) [ 'foo' => 'bar', 'baz' => null ],
-            (object) [ 'foo' => 'baz', 'baz' => true ],
-            (object) [ 'foo' => 'foo', 'baz' => false ]
-        ];
-
-        $pdoStatement = $this->getMockBuilder(\PDOStatement::class)
-            ->disableOriginalClone()
-            ->setMethods([ 'fetch' ])
-            ->getMock();
-
-        $pdoStatement->expects($this::exactly(3))
-            ->method('fetch')
-            ->with(
-                \PDO::FETCH_OBJ,
-                \PDO::FETCH_ORI_PRIOR,
-                null
-            )
-            ->willReturnOnConsecutiveCalls(
-                $rows[0],
-                $rows[1],
-                $rows[2]
-            );
-
-        $result = $this->getResultStub([ 'pointer' => 3 ], $pdoStatement);
-
-        $result->previous();
-        verify($result->current())->equals($rows[0]);
-
-        $result->previous();
-        verify($result->current())->equals($rows[1]);
-
-        $result->previous();
-        verify($result->current())->equals($rows[2]);
-
-        verify((new ObjectInspector($result))->getValue('pointer'))->equals(0);
-    }
-
-    /**
-     * @throws \ReflectionException
-     */
-    public function testSeek()
-    {
-        $rows = [
-            [ 'foo' => 'bar', 'baz' => null ],
-            [ 'foo' => 'baz', 'baz' => true ],
-            [ 'foo' => 'foo', 'baz' => false ]
-        ];
-
-        $pdoStatement = $this->getMockBuilder(\PDOStatement::class)
-            ->disableOriginalClone()
-            ->setMethods([ 'fetch' ])
-            ->getMock();
-
-        $pdoStatement->expects($this::exactly(3))
-            ->method('fetch')
-            ->withConsecutive(
-                [ \PDO::FETCH_ASSOC, \PDO::FETCH_ORI_ABS, 3 ],
-                [ \PDO::FETCH_ASSOC, \PDO::FETCH_ORI_ABS, 0 ],
-                [ \PDO::FETCH_ASSOC, \PDO::FETCH_ORI_ABS, 20 ]
-            )
-            ->willReturnOnConsecutiveCalls(
-                $rows[0],
-                $rows[1],
-                $rows[2]
-            );
-
-        $result = $this->getResultStub([
-            'pointer' => 0,
-            'iteratorFetchType' => Result::ITERATOR_FETCH_ASSOC
-        ], $pdoStatement);
-
-        $result->seek(3);
-        verify($result->current())->equals($rows[0]);
-
-        $result->seek(0);
-        verify($result->current())->equals($rows[1]);
-
-        $result->seek(20);
-        verify($result->current())->equals($rows[2]);
-
-        verify((new ObjectInspector($result))->getValue('pointer'))->equals(20);
-    }
-
     public function testKey()
     {
         $result = $this->getResultStub([ 'pointer' => 33 ]);
@@ -327,15 +238,23 @@ class ResultTest extends UnitTestCase
             ->setMethods([ 'fetch' ])
             ->getMock();
 
-        $pdoStatement->expects($this::exactly(1))
+        $pdoStatement->expects($this::exactly(2))
             ->method('fetch')
-            ->with(\PDO::FETCH_OBJ, \PDO::FETCH_ORI_ABS, 0)
+            ->with(\PDO::FETCH_OBJ)
             ->willReturn($row);
 
-        $result = $this->getResultStub([ 'pointer' => 3 ], $pdoStatement);
+        $result = $this->getResultStub([], $pdoStatement);
+
+        $firstRow = $result->current();
+        verify($firstRow)->notNull();
 
         $result->rewind();
         $result->rewind();
+
         $result->rewind();
+
+        $firstRowTake2 = $result->current();
+        verify($firstRowTake2)->notNull();
+        verify($firstRowTake2)->equals($firstRow);
     }
 }

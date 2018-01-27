@@ -209,7 +209,6 @@ class DriverTest extends UnitTestCase
 
     /**
      * @throws StatementExecutionException
-     * @throws \OS\DatabaseAccessLayer\Statement\Exception\InvalidFetchTypeException
      * @throws \ReflectionException
      */
     public function testQueryWillDelegateCallToPdo()
@@ -218,20 +217,28 @@ class DriverTest extends UnitTestCase
         $expectedResponse = $this->getMockBuilder(\PDOStatement::class)
             ->disableOriginalConstructor()
             ->disableProxyingToOriginalMethods()
+            ->setMethods([ 'execute' ])
             ->getMock();
+
+        $expectedResponse->expects($this::exactly(1))
+            ->method('execute')
+            ->willReturn(true);
 
         $pdoMock = $this->getMockBuilder(\PDO::class)
             ->disableOriginalConstructor()
-            ->setMethods([ 'query' ])
+            ->setMethods([ 'prepare' ])
             ->getMock();
 
         $pdoMock->expects($this::once())
-            ->method('query')
+            ->method('prepare')
             ->with($expectedQuery)
             ->willReturn($expectedResponse);
 
         /** @var Driver|MockObject $driverMock */
-        $driverMock = Stub::make(Driver::class, [ 'pdo' => $pdoMock ]);
+        $driverMock = Stub::make(Driver::class, [
+            'pdo' => $pdoMock,
+            'config' => $this->getConfigStub()
+        ]);
 
         $response = $driverMock->query($expectedQuery);
         verify($response)->isInstanceOf(Result::class);
@@ -240,7 +247,6 @@ class DriverTest extends UnitTestCase
 
     /**
      * @throws StatementExecutionException
-     * @throws \OS\DatabaseAccessLayer\Statement\Exception\InvalidFetchTypeException
      */
     public function testQueryWillCatchExceptions()
     {
@@ -250,11 +256,11 @@ class DriverTest extends UnitTestCase
 
         $pdoMock = $this->getMockBuilder(\PDO::class)
             ->disableOriginalConstructor()
-            ->setMethods([ 'query' ])
+            ->setMethods([ 'prepare' ])
             ->getMock();
 
         $pdoMock->expects($this::once())
-            ->method('query')
+            ->method('prepare')
             ->with($expectedQuery)
             ->willReturn(null);
 

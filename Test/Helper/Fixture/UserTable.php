@@ -34,7 +34,7 @@ class UserTable extends TableFixture
             CREATE TABLE `' . $this->getTableName() . '` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `name` varchar(50) COLLATE utf8_bin NOT NULL,
-                `password` binary(255) NOT NULL,
+                `password` binary(16) NOT NULL,
                 `created` datetime NOT NULL,
                 `nullable` int(11) DEFAULT NULL,
                 `bool` tinyint(1) DEFAULT \'0\',

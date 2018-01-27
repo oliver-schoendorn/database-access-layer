@@ -31,7 +31,7 @@ class Result implements StatementResult
     /**
      * @var int
      */
-    private $pointer = -1;
+    private $pointer = 0;
 
     /**
      * @var array|\stdClass|null
@@ -57,15 +57,6 @@ class Result implements StatementResult
     {
         $this->statement = $statement;
         $this->setIteratorFetchType($iteratorFetchType);
-
-        // If the executed statement was an insert / alter / etc., the seek
-        // method will throw an exception
-        try {
-            $this->seek(0);
-        }
-        catch (\PDOException $exception) {
-            $this->pointer = 0;
-        }
     }
 
     /**
@@ -84,10 +75,7 @@ class Result implements StatementResult
             throw new InvalidFetchTypeException($iteratorFetchType);
         }
 
-        if ($this->iteratorFetchType != $iteratorFetchType) {
-            $this->iteratorFetchType = $iteratorFetchType;
-            $this->seek($this->pointer);
-        }
+        $this->iteratorFetchType = $iteratorFetchType;
 
         return $this;
     }
@@ -108,6 +96,10 @@ class Result implements StatementResult
      */
     public function current()
     {
+        if ( ! $this->current && $this->pointer === 0) {
+            $this->fetch();
+            $this->pointer = 0;
+        }
         return $this->current;
     }
 
@@ -118,12 +110,17 @@ class Result implements StatementResult
      */
     public function fetchField(string $fieldName)
     {
+        $currentRow = $this->current();
         switch ($this->iteratorFetchType) {
             case $this::ITERATOR_FETCH_ASSOC:
-                return $this->current[$fieldName] ?? null;
+                return array_key_exists($fieldName, $currentRow)
+                    ? $currentRow[$fieldName]
+                    : null;
 
             case $this::ITERATOR_FETCH_OBJECT:
-                return $this->current->{$fieldName} ?? null;
+                return property_exists($currentRow, $fieldName)
+                    ? $currentRow->{$fieldName}
+                    : null;
         }
 
         return null; // @codeCoverageIgnore
@@ -134,7 +131,7 @@ class Result implements StatementResult
      */
     public function fetchRow()
     {
-        return $this->current;
+        return $this->current();
     }
 
     /**
@@ -145,44 +142,16 @@ class Result implements StatementResult
      */
     public function next()
     {
+        $this->fetch();
+    }
+
+    /**
+     * Increments the
+     */
+    private function fetch()
+    {
         ++$this->pointer;
-        $this->fetch(\PDO::FETCH_ORI_NEXT);
-    }
-
-    public function previous()
-    {
-        --$this->pointer;
-        $this->fetch(\PDO::FETCH_ORI_PRIOR);
-    }
-
-    /**
-     * Seeks to a position
-     * @link  http://php.net/manual/en/seekableiterator.seek.php
-     *
-     * @param int $position <p>
-     *                      The position to seek to.
-     *                      </p>
-     *
-     * @return void
-     * @since 5.1.0
-     */
-    public function seek($position)
-    {
-        if ($position == $this->pointer) {
-            return;
-        }
-
-        $this->pointer = $position;
-        $this->fetch(\PDO::FETCH_ORI_ABS, $position);
-    }
-
-    /**
-     * @param int $cursorOrientation
-     * @param int|null $position
-     */
-    private function fetch(int $cursorOrientation, int $position = null)
-    {
-        $this->current = $this->statement->fetch($this->getPdoFetchType(), $cursorOrientation, $position);
+        $this->current = $this->statement->fetch($this->getPdoFetchType());
     }
 
     /**
@@ -230,7 +199,10 @@ class Result implements StatementResult
      */
     public function rewind()
     {
-        $this->seek(0);
+        $this->pointer = 0;
+        $this->current = null;
+        $this->statement->closeCursor();
+        $this->statement->execute();
     }
 
     /**

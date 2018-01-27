@@ -35,7 +35,7 @@
         </whitelist>
     </filter>
     <logging>
-        <log type="coverage-clover" target="Test/Output/coverage.xml"/>
+        <log type="coverage-clover" target="Test/Output/coverage.xml" showUncoveredFiles="true"/>
     </logging>
     <testsuites>
         <testsuite name="AcceptanceTest">
