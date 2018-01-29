@@ -47,18 +47,21 @@ class FieldReference extends AbstractReference
      * MUST return the name of the reference and the alias e.g. "`foo` AS `bar`".
      *
      * @param Specification $specification
+     * @param bool $useTableAlias
      *
      * @return string
      */
-    public function toSqlIdentifier(Specification $specification): string
+    public function toSqlIdentifier(Specification $specification, bool $useTableAlias = true): string
     {
         $identifiers = [ $this->getName() ];
 
         if ($this->table) {
-            array_unshift($identifiers, $this->table->getAliasOrName());
+            array_unshift($identifiers, $useTableAlias
+                ? $this->table->getAliasOrName()
+                : $this->table->getName());
         }
 
-        return $specification->quoteIdentifierChain($this->getName()) .
+        return $specification->quoteIdentifierChain($identifiers) .
                ($this->getAlias() ? ' AS ' . $specification->quoteIdentifier($this->getAlias()) : '');
     }
 
@@ -69,17 +72,20 @@ class FieldReference extends AbstractReference
      * MUST return only the alias (or the name, if no alias is set) e.g. "`bar`".
      *
      * @param Specification $specification
+     * @param bool $useTableAlias
      *
      * @return string
      */
-    public function toSqlReference(Specification $specification): string
+    public function toSqlReference(Specification $specification, bool $useTableAlias = true): string
     {
         $identifiers = [ $this->getAliasOrName() ];
 
         if ($this->table) {
-            array_unshift($identifiers, $this->table->getAliasOrName());
+            array_unshift($identifiers, $useTableAlias
+                ? $this->table->getAliasOrName()
+                : $this->table->getName());
         }
 
-        return $specification->quoteIdentifierChain($this->getAliasOrName());
+        return $specification->quoteIdentifierChain($identifiers);
     }
 }
