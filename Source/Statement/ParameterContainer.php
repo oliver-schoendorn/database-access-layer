@@ -40,41 +40,48 @@ class ParameterContainer implements ParameterContainerInterface
     private $values = [];
 
     /**
-     * @param string $key
-     * @param mixed  $value
-     * @param int    $type
+     * @param string   $key
+     * @param mixed    $value
+     * @param int|null $type
      *
      * @return static
      * @throws InvalidParameterTypeException
      * @throws InvalidParameterKeyException
      */
-    public function setValue(string $key, $value, int $type)
+    public function setValue(string $key, $value, int $type = null)
     {
-        $this->validateType($type);
         $key = $this->validateKey($key);
-
         $this->values[$key] = $value;
-        $this->parameters[$key] = [ ':' . $key, $type ];
+
+        if ($type !== null || ! array_key_exists($key, $this->parameters)) {
+            $type = $type ?? static::guessParameterType($value);
+            static::validateType($type);
+            $this->parameters[$key] = [ ':' . $key, $type ];
+        }
 
         return $this;
     }
 
     /**
-     * @param string $key
-     * @param mixed  &$value
-     * @param int    $type
+     * @param string   $key
+     * @param mixed    &$value
+     * @param int|null $type
      *
      * @return static
      * @throws InvalidParameterTypeException
      * @throws InvalidParameterKeyException
      */
-    public function bindValue(string $key, &$value, int $type)
+    public function bindValue(string $key, &$value, int $type = null)
     {
-        $this->validateType($type);
         $key = $this->validateKey($key);
-
         $this->values[$key] = &$value;
-        $this->parameters[$key] = [ ':' . $key, $type ];
+
+        if ( ! array_key_exists($key, $this->parameters)) {
+            $type = $type ?? static::guessParameterType($value);
+            static::validateType($type);
+            $this->parameters[$key] = [ ':' . $key, $type ];
+        }
+
         return $this;
     }
 
@@ -91,7 +98,7 @@ class ParameterContainer implements ParameterContainerInterface
      */
     public function addParameter(string $key, int $type, $value = null): string
     {
-        $this->validateType($type);
+        static::validateType($type);
         $key = $this->validateKey($key);
         $key = $this->getUniqueParameterName($key);
 
@@ -112,6 +119,10 @@ class ParameterContainer implements ParameterContainerInterface
      */
     private function getUniqueParameterName(string $key): string
     {
+        if ( ! array_key_exists($key, $this->parameters)) {
+            return $key;
+        }
+
         $i = 0;
         do {
             ++$i;
@@ -138,24 +149,6 @@ class ParameterContainer implements ParameterContainerInterface
     }
 
     /**
-     * @param int $type
-     *
-     * @throws InvalidParameterTypeException
-     */
-    private function validateType(int $type)
-    {
-        if ( ! in_array($type, [
-            $this::TYPE_NULL,
-            $this::TYPE_INT,
-            $this::TYPE_BOOL,
-            $this::TYPE_STRING,
-            $this::TYPE_STREAM
-        ])) {
-            throw new InvalidParameterTypeException($type);
-        }
-    }
-
-    /**
      * Must return an associative array.
      *
      * Example:
@@ -176,5 +169,55 @@ class ParameterContainer implements ParameterContainerInterface
         }
 
         return $response;
+    }
+
+    /**
+     * @param int $type
+     *
+     * @throws InvalidParameterTypeException
+     */
+    public static function validateType(int $type)
+    {
+        if ( ! in_array($type, [
+            static::TYPE_NULL,
+            static::TYPE_INT,
+            static::TYPE_BOOL,
+            static::TYPE_STRING,
+            static::TYPE_STREAM
+        ])) {
+            throw new InvalidParameterTypeException($type);
+        }
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return int
+     */
+    public static function guessParameterType($value): int
+    {
+        switch (true) {
+            case is_null($value):
+                $type = static::TYPE_NULL;
+                break;
+
+            case is_int($value):
+                $type = static::TYPE_INT;
+                break;
+
+            case is_bool($value):
+                $type = static::TYPE_BOOL;
+                break;
+
+            case is_string($value):
+                $type = static::TYPE_STRING;
+                break;
+
+            case is_resource($value):
+                $type = static::TYPE_STREAM;
+                break;
+        }
+
+        return $type ?? static::TYPE_STRING;
     }
 }

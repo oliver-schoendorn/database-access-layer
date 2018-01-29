@@ -229,10 +229,10 @@ class ParameterContainerTest extends UnitTestCase
         verify($parameters['foo'])->equals([ ':foo', $container::TYPE_STRING ]);
         verify($parameters['foo_01'])->equals([ ':foo_01', $container::TYPE_STRING ]);
 
+        verify($parameters)->hasKey('bar');
         verify($parameters)->hasKey('bar_01');
-        verify($parameters)->hasKey('bar_02');
+        verify($parameters['bar'])->equals([ ':bar', $container::TYPE_STRING ]);
         verify($parameters['bar_01'])->equals([ ':bar_01', $container::TYPE_STRING ]);
-        verify($parameters['bar_02'])->equals([ ':bar_02', $container::TYPE_STRING ]);
     }
 
     public function testGetParametersWillReturnAllParameters()

@@ -52,7 +52,7 @@ class PreparedStatementTest extends UnitTestCase
             ->method('execute')
             ->willReturn(true);
 
-        $statement = new PreparedStatement($pdoStatement, false);
+        $statement = new PreparedStatement($pdoStatement);
         $result = $statement->execute();
         verify($result)->isInstanceOf(Result::class);
     }
@@ -136,7 +136,7 @@ class PreparedStatementTest extends UnitTestCase
             ->method('execute')
             ->willThrowException(new \PDOException('testException'));
 
-        $statement = new PreparedStatement($pdoStatement, true);
+        $statement = new PreparedStatement($pdoStatement, null, true);
 
         try { $statement->execute(); }
         catch (StatementExecutionException $exception) {
@@ -181,7 +181,7 @@ class PreparedStatementTest extends UnitTestCase
             ->method('errorInfo')
             ->willReturn([ 'foo', 123, 'bar' ]);
 
-        $statement = new PreparedStatement($pdoStatement, true);
+        $statement = new PreparedStatement($pdoStatement, null, true);
 
         try { $statement->execute(); }
         catch (StatementExecutionException $exception) {

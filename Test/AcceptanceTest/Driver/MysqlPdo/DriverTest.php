@@ -95,7 +95,9 @@ class DriverTest extends AcceptanceTestCase
         $this->expectException(UnreachableException::class);
 
         $config = new DatabaseConfig([ 'host' => '1.1.1.1' ]);
-        new Driver($config);
+        new Driver($config, null, [
+            \PDO::ATTR_TIMEOUT => 2
+        ]);
     }
 
     /**

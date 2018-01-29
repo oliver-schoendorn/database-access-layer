@@ -36,19 +36,15 @@ class PreparedStatementTest extends AcceptanceTestCase
      */
     private $table;
 
+    /**
+     * @var array[]
+     */
+    private $dataSet;
+
     protected function init()
     {
         $this->table = new UserTable($this->getConnection());
-    }
-
-    /**
-     * Returns the test dataset.
-     *
-     * @return IDataSet
-     */
-    protected function getDataSet()
-    {
-        return new ArrayDataSet([ $this->table->getTableName() => [
+        $this->dataSet = [
             [
                 'id' => 1,
                 'name' => 'User Name 01',
@@ -73,7 +69,17 @@ class PreparedStatementTest extends AcceptanceTestCase
                 'nullable' => null,
                 'bool' => 0
             ],
-        ]]);
+        ];
+    }
+
+    /**
+     * Returns the test dataset.
+     *
+     * @return IDataSet
+     */
+    protected function getDataSet()
+    {
+        return new ArrayDataSet([ $this->table->getTableName() => $this->dataSet]);
     }
 
     /**
@@ -82,7 +88,7 @@ class PreparedStatementTest extends AcceptanceTestCase
     public function testConstructorWillInitializeAndStoreValues()
     {
         $statement = Stub::make(\PDOStatement::class);
-        $preparedStatement = new PreparedStatement($statement, true);
+        $preparedStatement = new PreparedStatement($statement, null, true);
         $inspector = new ObjectInspector($preparedStatement);
 
         verify($inspector->getValue('statement'))->same($statement);
@@ -96,7 +102,7 @@ class PreparedStatementTest extends AcceptanceTestCase
     {
         $pdoStatement = $this->getConnection()->getConnection()
             ->prepare('SELECT * FROM `' . $this->table->getTableName() . '`;');
-        $statement = new PreparedStatement($pdoStatement, true);
+        $statement = new PreparedStatement($pdoStatement, null, true);
 
         $result = $statement->execute();
         verify($result)->isInstanceOf(Result::class);
@@ -110,7 +116,7 @@ class PreparedStatementTest extends AcceptanceTestCase
     {
         $pdoStatement = $this->getConnection()->getConnection()
             ->prepare('SELECT * FROM `' . $this->table->getTableName() . '` WHERE `name` = :name;');
-        $statement = new PreparedStatement($pdoStatement, true);
+        $statement = new PreparedStatement($pdoStatement, null, true);
 
         $container = new ParameterContainer();
         $container->setValue('name', 'User Name 03', $container::TYPE_STRING);
@@ -127,7 +133,7 @@ class PreparedStatementTest extends AcceptanceTestCase
     {
         $pdoStatement = $this->getConnection()->getConnection()
             ->prepare('SELECT * FROM `unknown` WHERE `name` = :name;');
-        $statement = new PreparedStatement($pdoStatement, true);
+        $statement = new PreparedStatement($pdoStatement, null, true);
 
         $container = new ParameterContainer();
         $container->setValue('name', 'User Name 03', $container::TYPE_STRING);
@@ -182,10 +188,55 @@ class PreparedStatementTest extends AcceptanceTestCase
 
         $pdoStatement = $this->getConnection()->getConnection()
             ->prepare('SELECT * FROM `' . $this->table->getTableName() . '` WHERE ' . $condition . ';');
-        $statement = new PreparedStatement($pdoStatement, true);
+        $statement = new PreparedStatement($pdoStatement, null, true);
 
         $result = $statement->execute($container);
         verify($result->count())->equals($expectedRows);
+    }
+
+    /**
+     * @throws StatementExecutionException
+     * @throws \OS\DatabaseAccessLayer\Statement\Exception\InvalidParameterKeyException
+     * @throws \OS\DatabaseAccessLayer\Statement\Exception\InvalidParameterTypeException
+     * @throws \OS\DatabaseAccessLayer\Statement\Exception\MissingParameterValueException
+     */
+    public function testSetAndGetParameterContainer()
+    {
+        $container = new ParameterContainer();
+        $container->bindValue('id', $value, $container::TYPE_INT);
+
+        $pdoStatement = $this->getConnection()->getConnection()
+            ->prepare('SELECT * FROM `' . $this->table->getTableName(). '` WHERE id = :id;');
+
+        $statement = new PreparedStatement($pdoStatement, $container);
+        $value = 3;
+
+        $result = $statement->execute();
+        verify($result->count())->equals(1);
+        verify($result->fetchRow())->equals((object) $this->dataSet[2]);
+
+        $value = 1;
+        $result = $statement->execute();
+        verify($result->count())->equals(1);
+        verify($result->fetchRow())->equals((object) $this->dataSet[0]);
+
+        $result = $statement->execute($container);
+        verify($result->count())->equals(1);
+        verify($result->fetchRow())->equals((object) $this->dataSet[0]);
+
+        $container->setValue('id', 2);
+        $result = $statement->execute($container);
+        verify($result->count())->equals(1);
+        verify($result->fetchRow())->equals((object) $this->dataSet[1]);
+
+        verify($statement->getParameterContainer())->same($container);
+
+        $container2 = new ParameterContainer();
+        $container2->setValue('id', 3);
+        $result = $statement->execute($container2);
+        verify($result->count())->equals(1);
+        verify($result->fetchRow())->equals((object) $this->dataSet[2]);
+        verify($statement->getParameterContainer())->same($container2);
     }
 
     /**
@@ -210,7 +261,7 @@ class PreparedStatementTest extends AcceptanceTestCase
         $container->setValue('password', hex2bin(md5(rand(0,9999))), $container::TYPE_STRING);
         $container->setValue('nullable', null, $container::TYPE_NULL);
 
-        $preparedStatement = new PreparedStatement($pdoStatement, true);
+        $preparedStatement = new PreparedStatement($pdoStatement, null, true);
 
         $result = $preparedStatement->execute($container);
         verify($result->count())->equals(1);
@@ -242,7 +293,7 @@ class PreparedStatementTest extends AcceptanceTestCase
 
         $pdoStatement = $this->getConnection()->getConnection()
             ->prepare('SELECT * FROM `' . $this->table->getTableName() . '` WHERE ' . $condition . ';');
-        $statement = new PreparedStatement($pdoStatement, true);
+        $statement = new PreparedStatement($pdoStatement, null, true);
 
         if ($valueType === $container::TYPE_NULL) {
             $value = 'NULL';

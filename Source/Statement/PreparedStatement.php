@@ -26,6 +26,18 @@ interface PreparedStatement
     /**
      * @param ParameterContainerInterface|null $container
      *
+     * @return static
+     */
+    public function setParameterContainer(ParameterContainerInterface $container = null);
+
+    /**
+     * @return ParameterContainerInterface|null
+     */
+    public function getParameterContainer();
+
+    /**
+     * @param ParameterContainerInterface|null $container
+     *
      * @return Result
      * @throws MissingParameterValueException
      * @throws StatementExecutionException

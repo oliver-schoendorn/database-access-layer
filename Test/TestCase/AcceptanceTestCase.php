@@ -61,25 +61,29 @@ abstract class AcceptanceTestCase extends TestCase
         return $this->connection;
     }
 
-    protected function getDriverConfig(): DatabaseConfig
+    protected function getDriverConfig(bool $debug = false): DatabaseConfig
     {
         return new DatabaseConfig([
             'host' => $_ENV['DB_HOST'],
             'name' => $_ENV['DB_NAME'],
             'username' => $_ENV['DB_USER'],
-            'password' => $_ENV['DB_PASS']
+            'password' => $_ENV['DB_PASS'],
+            'debug' => $debug
         ]);
     }
 
     /**
+     * @param bool|false $debug
+     *
      * @return Driver
      * @throws \OS\DatabaseAccessLayer\Exception\DriverException
      */
-    protected function getDriver(): Driver
+    protected function getDriver(bool $debug = false): Driver
     {
         if ( ! $this->driver) {
-            $config = $this->getDriverConfig();
+            $config = $this->getDriverConfig($debug);
             $this->driver = new Driver\MysqlPdo\Driver($config);
+            $this->driver->query('SET global max_connections = 200;');
         }
 
         return $this->driver;

@@ -31,6 +31,11 @@ class PreparedStatement implements \OS\DatabaseAccessLayer\Statement\PreparedSta
     private $statement;
 
     /**
+     * @var ParameterContainerInterface|null
+     */
+    private $container;
+
+    /**
      * @var bool
      */
     private $debug;
@@ -39,12 +44,33 @@ class PreparedStatement implements \OS\DatabaseAccessLayer\Statement\PreparedSta
      * PreparedStatement constructor.
      *
      * @param \PDOStatement $statement
+     * @param ParameterContainerInterface|null $container
      * @param bool $debug
      */
-    public function __construct(\PDOStatement $statement, bool $debug = false)
+    public function __construct(\PDOStatement $statement, ParameterContainerInterface $container = null, bool $debug = false)
     {
         $this->debug = $debug;
         $this->statement = $statement;
+        $this->container = $container;
+    }
+
+    /**
+     * @param ParameterContainerInterface|null $container
+     *
+     * @return static
+     */
+    public function setParameterContainer(ParameterContainerInterface $container = null)
+    {
+        $this->container = $container;
+        return $this;
+    }
+
+    /**
+     * @return ParameterContainerInterface|null
+     */
+    public function getParameterContainer()
+    {
+        return $this->container;
     }
 
     /**
@@ -56,7 +82,10 @@ class PreparedStatement implements \OS\DatabaseAccessLayer\Statement\PreparedSta
      */
     public function execute(ParameterContainerInterface $parameterContainer = null): StatementResult
     {
+        $parameterContainer = $parameterContainer ?? $this->container;
+
         if ( ! is_null($parameterContainer)) {
+            $this->container = $parameterContainer;
             $this->bindParameters($parameterContainer);
         }
 
@@ -68,23 +97,25 @@ class PreparedStatement implements \OS\DatabaseAccessLayer\Statement\PreparedSta
             throw new \RuntimeException($errorInfo[0].': '.$errorInfo[2], $errorInfo[1]);
         }
         catch (\PDOException $pdoException) {
-            throw new StatementExecutionException(
-                1013,
-                $this->debug
-                    ? $pdoException->getMessage() . ' - Query: ' . $this->getDebugData($parameterContainer)
-                    : null,
-                $pdoException
-            );
+            throw new StatementExecutionException(1013, $this->getExceptionMessage($pdoException, $parameterContainer), $pdoException);
         }
         catch (\Throwable $exception) {
-            throw new StatementExecutionException(
-                $this->debug ? $exception->getCode() : 1014,
-                $this->debug
-                    ? $exception->getMessage() . ' - Query: ' . $this->getDebugData($parameterContainer)
-                    : null,
-                $exception
-            );
+            throw new StatementExecutionException($this->debug ? $exception->getCode() : 1014, $this->getExceptionMessage($exception, $parameterContainer), $exception);
         }
+    }
+
+    /**
+     * @param \Throwable $throwable
+     * @param ParameterContainerInterface|null $parameterContainer
+     *
+     * @return string|null
+     * @throws MissingParameterValueException
+     */
+    private function getExceptionMessage(\Throwable $throwable, ParameterContainerInterface $parameterContainer = null)
+    {
+        return $this->debug
+            ? $throwable->getMessage() . ' - Query: ' . $this->getDebugData($parameterContainer)
+            : null;
     }
 
     /**
@@ -94,9 +125,9 @@ class PreparedStatement implements \OS\DatabaseAccessLayer\Statement\PreparedSta
      */
     private function bindParameters(ParameterContainerInterface $parameterContainer)
     {
-        foreach ($parameterContainer->getParameters() as $parameter) {
+        foreach ($parameterContainer->getParameters() as &$parameter) {
             $parameter[2] = $this->parseParameterType($parameter[2]);
-            $this->statement->bindParam(...$parameter);
+            $this->statement->bindParam($parameter[0],$parameter[1], $parameter[2]);
         }
     }
 

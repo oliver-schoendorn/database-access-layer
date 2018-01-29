@@ -15,12 +15,13 @@
  * limitations under the License.
  */
 
-namespace OS\DatabaseAccessLayer\Statement\Exception;
+namespace OS\DatabaseAccessLayer\Expression;
 
 
-use OS\DatabaseAccessLayer\Exception\DriverException;
+use OS\DatabaseAccessLayer\Specification;
+use OS\DatabaseAccessLayer\Statement\ParameterContainerInterface;
 
-class StatementException extends DriverException
+interface PreparableExpression extends Expression
 {
-
+    public function toPreparableSql(Specification $specification, ParameterContainerInterface &$container): string;
 }

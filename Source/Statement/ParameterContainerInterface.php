@@ -18,6 +18,7 @@
 namespace OS\DatabaseAccessLayer\Statement;
 
 
+use OS\DatabaseAccessLayer\Statement\Exception\InvalidParameterKeyException;
 use OS\DatabaseAccessLayer\Statement\Exception\InvalidParameterTypeException;
 use OS\DatabaseAccessLayer\Statement\Exception\MissingParameterValueException;
 
@@ -33,28 +34,42 @@ interface ParameterContainerInterface
     const TYPE_STREAM = 40;
 
     /**
+     * @param int $type
+     *
+     * @throws InvalidParameterTypeException
+     */
+    public static function validateType(int $type);
+
+    /**
+     * @param mixed $value
+     *
+     * @return int
+     */
+    public static function guessParameterType($value): int;
+
+    /**
      * Stores a value for the execution of a prepared statement
      *
      * @param string $key
      * @param mixed  $value
-     * @param int    $type
+     * @param int|null $type
      *
      * @return static
      * @throws InvalidParameterTypeException
      */
-    public function setValue(string $key, $value, int $type);
+    public function setValue(string $key, $value, int $type = null);
 
     /**
      * Binds a reference to a value for the execution of a prepared statement
      *
-     * @param string $key
-     * @param mixed  &$value
-     * @param int    $type
+     * @param string   $key
+     * @param mixed    &$value
+     * @param int|null $type
      *
      * @return static
      * @throws InvalidParameterTypeException
      */
-    public function bindValue(string $key, &$value, int $type);
+    public function bindValue(string $key, &$value, int $type = null);
 
     /**
      * Registers a new parameter type and generates a unique parameter key
@@ -64,6 +79,8 @@ interface ParameterContainerInterface
      * @param mixed|null $value
      *
      * @return string
+     * @throws InvalidParameterTypeException
+     * @throws InvalidParameterKeyException
      */
     public function addParameter(string $key, int $type, $value = null): string;
 

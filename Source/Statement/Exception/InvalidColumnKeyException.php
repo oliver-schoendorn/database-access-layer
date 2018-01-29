@@ -18,9 +18,7 @@
 namespace OS\DatabaseAccessLayer\Statement\Exception;
 
 
-use OS\DatabaseAccessLayer\Exception\DriverException;
-
-class StatementException extends DriverException
+class InvalidColumnKeyException extends StatementException
 {
 
 }

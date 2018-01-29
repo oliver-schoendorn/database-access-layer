@@ -75,7 +75,12 @@ class Result implements StatementResult
             throw new InvalidFetchTypeException($iteratorFetchType);
         }
 
-        $this->iteratorFetchType = $iteratorFetchType;
+        if ($this->iteratorFetchType !== $iteratorFetchType) {
+            $this->iteratorFetchType = $iteratorFetchType;
+            if ($this->current) {
+                $this->rewind();
+            }
+        }
 
         return $this;
     }

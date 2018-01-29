@@ -48,6 +48,15 @@ abstract class TableFixture
         $this->table = new Table($this->getTableMeta(), $this->connection);
     }
 
+    public function fetchAll(int $fetchType = \PDO::FETCH_ASSOC): array
+    {
+        $statement = $this->connection->getConnection()->prepare(
+            'SELECT * FROM `' . $this->getTableName() . '` ORDER BY `id` ASC;');
+
+        $statement->execute();
+        return $statement->fetchAll($fetchType);
+    }
+
     private function initializeTable(\PDO $pdo)
     {
         $tableName = $pdo->quote($this->getTableName());

@@ -218,6 +218,6 @@ class Driver implements DriverInterface
             );
         }
 
-        return new PreparedStatement($statement, $this->config->isDebug());
+        return new PreparedStatement($statement, null, $this->config->isDebug());
     }
 }

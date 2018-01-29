@@ -18,6 +18,7 @@
 namespace OS\DatabaseAccessLayer\Driver\MysqlPdo;
 
 use OS\DatabaseAccessLayer\Driver;
+use OS\DatabaseAccessLayer\Expression\Expression;
 use OS\DatabaseAccessLayer\Specification as SpecificationInterface;
 
 
@@ -97,6 +98,25 @@ class Specification implements SpecificationInterface
      */
     public function quoteValue($value): string
     {
+        // Stringify expression (handles quoting on its own)
+        if ($value instanceof Expression) {
+            return $value->toSql($this);
+        }
+
+        if (is_null($value)) {
+            return 'NULL';
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'TRUE' : 'FALSE';
+        }
+
+        // Stringify resource
+        if (is_resource($value)) {
+            rewind($value);
+            $value = stream_get_contents($value);
+        }
+
         return $this->driver->escape($value);
     }
 
