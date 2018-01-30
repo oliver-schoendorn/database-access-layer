@@ -89,6 +89,30 @@ class ResultTest extends UnitTestCase
     }
 
     /**
+     * @throws InvalidFetchTypeException
+     */
+    public function testSetIteratorWillRewindResult()
+    {
+        $pdoStatement = $this->getMockBuilder(\PDOStatement::class)
+            ->disableOriginalClone()
+            ->setMethods([ 'execute', 'fetch' ])
+            ->getMock();
+
+        $pdoStatement->expects($this::once())
+            ->method('execute')
+            ->willReturn(true);
+
+        $pdoStatement->expects($this::once())
+            ->method('fetch')
+            ->with(\PDO::FETCH_ASSOC)
+            ->willReturn([ 'baz' => 'bar' ]);
+
+        $result = $this->getResultStub([ 'current' => [ 'foo' ]], $pdoStatement);
+        verify($result->setIteratorFetchType($result::ITERATOR_FETCH_ASSOC))->same($result);
+        verify($result->current())->equals([ 'baz' => 'bar' ]);
+    }
+
+    /**
      * @param int $fetchType
      *
      * @throws \ReflectionException

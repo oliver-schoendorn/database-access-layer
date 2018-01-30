@@ -41,6 +41,19 @@ class PreparedStatementTest extends UnitTestCase
             ->getMock();
     }
 
+    public function testSetAndGetParameterContainer()
+    {
+        $pdoStatement = $this->getPdoStatementMock();
+        $container = new ParameterContainer();
+        $statement = new PreparedStatement($pdoStatement, $container);
+
+        verify($statement->getParameterContainer())->same($container);
+
+        verify($statement->setParameterContainer(new ParameterContainer()))->same($statement);
+        verify($statement->getParameterContainer())->notSame($container);
+        verify($statement->getParameterContainer())->isInstanceOf(ParameterContainer::class);
+    }
+
     /**
      * @throws \OS\DatabaseAccessLayer\Statement\Exception\MissingParameterValueException
      * @throws \OS\DatabaseAccessLayer\Statement\Exception\StatementExecutionException
