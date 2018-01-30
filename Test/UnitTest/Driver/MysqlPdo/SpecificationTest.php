@@ -20,6 +20,7 @@ namespace OS\DatabaseAccessLayer\Test\UnitTest\Driver\MysqlPdo;
 
 use OS\DatabaseAccessLayer\Driver;
 use OS\DatabaseAccessLayer\Driver\MysqlPdo\Specification;
+use OS\DatabaseAccessLayer\Expression\Expression;
 use OS\DatabaseAccessLayer\Test\Helper\ObjectInspector;
 use OS\DatabaseAccessLayer\Test\TestCase\UnitTestCase;
 use Exception;
@@ -110,25 +111,56 @@ class SpecificationTest extends UnitTestCase
         verify($response)->regExp('/^(?:.{1}\w+.{1}|\*)\.(?:.{1}\w+.{1}|\*)\.(?:.{1}\w+.{1}|\*)$/');
     }
 
-    /**
-     *
-     */
-    public function testQuoteValueWillDelegateEscapingToDriver()
+    public function quoteValueDataProvider()
     {
-        $expectedValue = 'FooBar';
+        $expressionMock = $this->getMockBuilder(Expression::class)
+            ->setMethods([ 'toSql' ])
+            ->getMockForAbstractClass();
 
+        $expressionMock->expects($this::once())
+            ->method('toSql')
+            ->with($this::callback(function($spec) {
+                verify($spec)->isInstanceOf(\OS\DatabaseAccessLayer\Specification::class);
+                return true;
+            }))
+            ->willReturn('foo');
+
+
+        $resource = fopen('php://memory', 'r+');
+        fputs($resource, 'test bar');
+
+        return [
+            'basic string' => [ 'foo', 'foo' ],
+            'expression' => [ $expressionMock, 'foo', false ],
+            'int' => [ 2, 2 ],
+            'null' => [ null, 'NULL', false ],
+            'false' => [ false, 'FALSE', false ],
+            'true' => [ true, 'TRUE', false ],
+            'resource' => [ $resource, 'test bar' ]
+        ];
+    }
+
+    /**
+     * @param mixed $input
+     * @param string $expectedValue
+     * @param bool $willEscapeThroughDriver
+     *
+     * @dataProvider quoteValueDataProvider
+     */
+    public function testQuoteValueWillDelegateEscapingToDriver($input, $expectedValue, $willEscapeThroughDriver = true)
+    {
         /** @var Driver|MockObject $driverMock */
         $driverMock = $this->getMockBuilder(Driver::class)
             ->setMethods([ 'escape' ])
             ->getMockForAbstractClass();
 
-        $driverMock->expects($this::once())
+        $driverMock->expects($willEscapeThroughDriver ? $this::once() : $this::never())
             ->method('escape')
             ->with($expectedValue)
             ->willReturnArgument(0);
 
         $subject = new Specification($driverMock);
-        $response = $subject->quoteValue($expectedValue);
+        $response = $subject->quoteValue($input);
         verify($response)->equals($expectedValue);
     }
 
